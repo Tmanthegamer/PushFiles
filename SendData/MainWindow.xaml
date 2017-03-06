@@ -13,7 +13,7 @@
             <MenuItem Header="File">
                 <MenuItem Header="New Message" Click="NewMessage_OnClick" HorizontalAlignment="Left" />
                 <MenuItem Header="Messages" Click="Messages_OnClick" HorizontalAlignment="Left" />
-                <MenuItem Header="Exit" HorizontalAlignment="Left" />
+                <MenuItem Header="Exit" Click="Exit_Program" HorizontalAlignment="Left" />
             </MenuItem>
             <MenuItem Header="Edit" />
             <MenuItem Header="Help" />
