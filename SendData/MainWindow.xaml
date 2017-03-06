@@ -1,0 +1,42 @@
+﻿<control:MetroWindow x:Class="SendData.MainWindow"
+                     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                     xmlns:control="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
+                     mc:Ignorable="d"
+                     Title="MainWindow" Height="592" Width="800" ResizeMode="NoResize">
+    <Grid>
+
+        <!-- Menu on top -->
+        <Menu x:Name="MenuTab" DockPanel.Dock="Top" VerticalAlignment="Top">
+            <MenuItem Header="File">
+                <MenuItem Header="New Message" Click="NewMessage_OnClick" HorizontalAlignment="Left" />
+                <MenuItem Header="Messages" Click="Messages_OnClick" HorizontalAlignment="Left" />
+                <MenuItem Header="Exit" HorizontalAlignment="Left" />
+            </MenuItem>
+            <MenuItem Header="Edit" />
+            <MenuItem Header="Help" />
+        </Menu>
+
+        <!-- Content Grid -->
+        <Grid Margin="0,30,0,20">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="2*"/>
+                <ColumnDefinition Width="9*"/>
+            </Grid.ColumnDefinitions>
+            <ListView Name="FolderListView"></ListView>
+            <ListView x:Name="ContentListView" Grid.Column="1"/>
+
+        </Grid>
+
+        <!-- Status Bar on bottom -->
+        <StatusBar DockPanel.Dock="Bottom" Height="20" VerticalAlignment="Bottom">
+            <StatusBarItem Name="StatusItemSelectedCount">
+                <TextBlock>
+                    none
+                </TextBlock>
+            </StatusBarItem>
+        </StatusBar>
+    </Grid>
+</control:MetroWindow>
