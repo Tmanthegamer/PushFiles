@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace SendData {
     public static class NetworkScanner {
-
+        
 
     }
 }

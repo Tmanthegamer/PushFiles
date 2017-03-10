@@ -77,15 +77,12 @@ namespace SendData {
             Socket handler = listener.EndAccept(ar);
 
             // Create the state object.  
-            StateObject state = new StateObject();
-            state.workSocket = handler;
+            StateObject state = new StateObject {workSocket = handler};
             handler.BeginReceive(state.buffer, 0, StateObject.BufferSize, 0,
                 new AsyncCallback(ReadCallback), state);
         }
 
         public static void ReadCallback(IAsyncResult ar) {
-            String content = String.Empty;
-
             // Retrieve the state object and the handler socket  
             // from the asynchronous state object.  
             StateObject state = (StateObject)ar.AsyncState;
@@ -101,8 +98,8 @@ namespace SendData {
 
                 // Check for end-of-file tag. If it is not there, read   
                 // more data.  
-                content = state.sb.ToString();
-                if (content.IndexOf("<EOF>") > -1) {
+                string content = state.sb.ToString();
+                if (content.IndexOf("<EOF>", StringComparison.Ordinal) > -1) {
                     // All the data has been read from the   
                     // client. Display it on the console.  
                     Console.WriteLine($@"Read {content.Length} bytes from socket. Data : {content}");
