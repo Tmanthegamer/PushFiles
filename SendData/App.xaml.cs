@@ -12,7 +12,12 @@ namespace SendData {
                 PingServer ps = new PingServer();
                 ps.Run();
             });
+            Thread pingClientThread = new Thread(() => {
+                PingClient pc = new PingClient();
+                pc.Run();
+            });
             pingServerThread.Start();
+            pingClientThread.Start();
         }
     }
 }

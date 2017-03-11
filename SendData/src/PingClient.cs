@@ -1,29 +1,54 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Net.NetworkInformation;
 using System.Net.Sockets;
-using System.Text;
 using System.Threading;
 
 namespace SendData {
-    public class StateObject {
-        // Client  socket.  
-        public Socket WorkSocket;
-        // Size of receive buffer.  
-        public const int BufferSize = 1024;
-        // Receive buffer.  
-        public readonly byte[] Buffer = new byte[BufferSize];
-        // Received data string.  
-        public readonly StringBuilder Sb = new StringBuilder();
-    }
-
-    public class PingServer {
+    class PingClient {
         private readonly Socket _pingSocket;
         private static readonly ManualResetEvent AllDone = new ManualResetEvent(false);
 
-        public PingServer() {
+        public PingClient() {
             _pingSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
         }
+
+        public static IPAddress GetSubnetMask(IPAddress address) {
+            foreach (NetworkInterface adapter in NetworkInterface.GetAllNetworkInterfaces()) {
+                foreach (
+                    UnicastIPAddressInformation unicastIpAddressInformation in
+                    adapter.GetIPProperties().UnicastAddresses) {
+                    if (unicastIpAddressInformation.Address.AddressFamily != AddressFamily.InterNetwork) continue;
+                    if (address.Equals(unicastIpAddressInformation.Address)) {
+                        return unicastIpAddressInformation.IPv4Mask;
+                    }
+                }
+            }
+            throw new ArgumentException($"Can't find subnetmask for IP address {address}");
+        }
+
+        private string MaskIp(IPAddress ip, int size) {
+            string lIp = ip.ToString();
+            string[] slIp = lIp.Split('.');
+            slIp = slIp.Take(size).ToArray();
+            return slIp.Aggregate(string.Empty, (current, s) => current + s + ".");
+        }
+
+        private IEnumerable<IPAddress> IterateLocalIps(IPAddress localIp) {
+            IPAddress mask = GetSubnetMask(localIp);
+                Console.WriteLine(mask);
+                string[] smask = mask.ToString().Split('.');
+                int maskCount = smask.Count(s => s == "0");
+                int ipsize = smask.Count(s => s == "255");
+                string maskedAddr = MaskIp(localIp, ipsize);
+                double cips = Math.Pow(255, maskCount);
+                for (int i = 0; i < cips; i++) {
+                    yield return IPAddress.Parse(maskedAddr + i);
+                }
+        }
+
 
         public void Run() {
             IPHostEntry host = Dns.GetHostEntry(Dns.GetHostName());
@@ -31,11 +56,13 @@ namespace SendData {
                 from ipAddress in host.AddressList
                 where ipAddress.AddressFamily == AddressFamily.InterNetwork
                 select ipAddress.MapToIPv4()).FirstOrDefault();
-            Console.WriteLine(address);
+            foreach (IPAddress ipAddress in IterateLocalIps(address)) {
+                Console.WriteLine(ipAddress);
+            }
             if (address == null) {
                 throw new NullReferenceException("IPAddress was null in PingServer.Run");
             }
-            try {
+            /*try {
                 foreach (int port in PortSettings.PingPortList()) {
                     _pingSocket.Bind(new IPEndPoint(address, port));
                     if (_pingSocket.IsBound) break;
@@ -54,6 +81,7 @@ namespace SendData {
                 Console.WriteLine(@"Inside PingServer.Run");
                 throw;
             }
+            */
         }
 
         private static void AcceptCallback(IAsyncResult ar) {

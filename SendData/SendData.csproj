@@ -83,11 +83,11 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="src\AsynchronousSocketListener.cs" />
     <Compile Include="src\Connection.cs" />
     <Compile Include="src\FilePicker.cs" />
     <Compile Include="src\FileTransfer.cs" />
     <Compile Include="src\NetworkScanner.cs" />
+    <Compile Include="src\PingClient.cs" />
     <Compile Include="src\PingServer.cs" />
     <Compile Include="src\PortSettings.cs" />
     <Page Include="MainWindow.xaml">
