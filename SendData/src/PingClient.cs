@@ -63,18 +63,17 @@ namespace SendData {
                 foreach (int port in PortSettings.PingPortList()) {
                     try {
                         AllDone.Reset();
-                        Console.WriteLine($@"On Port: {port}");
+                        //Console.WriteLine($@"On Port: {port}");
                         if (_pingSocket.Connected) break;
                         IAsyncResult ar = _pingSocket.BeginConnect(new IPEndPoint(ipAddress, port), ConnectCallback,
                             _pingSocket);
                         if(!ar.AsyncWaitHandle.WaitOne(1000)) { 
-                            Console.WriteLine(@"Connection Timed out");
-                            throw new Exception("Failed to Connect");
+                            throw new Exception();
                         }
                         AllDone.WaitOne();
                     }
                     catch (Exception e) {
-                        Console.WriteLine(@"Could not connect.");
+                        //Console.WriteLine(@"Could not connect.");
                     }
                 }
             }
