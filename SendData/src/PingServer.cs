@@ -12,7 +12,7 @@ namespace SendData {
         // Size of receive buffer.  
         public const int BufferSize = 1024;
         // Receive buffer.  
-        public readonly byte[] Buffer = new byte[BufferSize];
+        public byte[] Buffer = new byte[BufferSize];
         // Received data string.  
         public readonly StringBuilder Sb = new StringBuilder();
     }
@@ -20,6 +20,7 @@ namespace SendData {
     public class PingServer {
         private readonly Socket _pingSocket;
         private static readonly ManualResetEvent AllDone = new ManualResetEvent(false);
+        public bool Exit { get; private set; } = false;
 
         public PingServer() {
             _pingSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
@@ -31,7 +32,6 @@ namespace SendData {
                 from ipAddress in host.AddressList
                 where ipAddress.AddressFamily == AddressFamily.InterNetwork
                 select ipAddress.MapToIPv4()).FirstOrDefault();
-            Console.WriteLine(address);
             if (address == null) {
                 throw new NullReferenceException("IPAddress was null in PingServer.Run");
             }
@@ -44,7 +44,8 @@ namespace SendData {
                 _pingSocket.Listen(byte.MaxValue);
                 while (true) {
                     AllDone.Reset();
-                    Console.WriteLine(@"Waiting for a Connection");
+                    if (Exit) return;
+                    Console.WriteLine($@"Waiting for a Connection on {_pingSocket.LocalEndPoint}");
                     _pingSocket.BeginAccept(AcceptCallback, _pingSocket);
                     AllDone.WaitOne();
                 }
@@ -54,6 +55,19 @@ namespace SendData {
                 Console.WriteLine(@"Inside PingServer.Run");
                 throw;
             }
+        }
+
+        public void Shutdown() {
+            Exit = true;
+            try {
+                if (!_pingSocket.Connected) return;
+                _pingSocket.Shutdown(SocketShutdown.Both);
+                _pingSocket.Close();
+            }
+            catch (SocketException e) {
+                Console.WriteLine(e);
+            }
+           
         }
 
         private static void AcceptCallback(IAsyncResult ar) {

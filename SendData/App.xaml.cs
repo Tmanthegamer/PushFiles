@@ -6,18 +6,30 @@ namespace SendData {
     ///     Interaction logic for App.xaml
     /// </summary>
     public partial class App : Application {
+
+        private Thread _pingServerThread;
+        private Thread _pingClientThread;
+        private readonly PingServer _ps = new PingServer();
+        private readonly PingClient _pc = new PingClient();
+
         protected override void OnStartup(StartupEventArgs e) {
             base.OnStartup(e);
-            Thread pingServerThread = new Thread(() => {
-                PingServer ps = new PingServer();
-                ps.Run();
+            _pingServerThread = new Thread(() => {
+                _ps.Run();
             });
-            Thread pingClientThread = new Thread(() => {
-                PingClient pc = new PingClient();
-                pc.Run();
+            _pingClientThread = new Thread(() => {
+                _pc.Run();
             });
-            pingServerThread.Start();
-            pingClientThread.Start();
+            _pingServerThread.Start();
+            _pingClientThread.Start();
+        }
+
+        protected  override void OnExit(ExitEventArgs e) {
+            base.OnExit(e);
+            _ps.Shutdown();
+            _pc.Shutdown();
+            _pingClientThread.Abort();
+            _pingServerThread.Abort();
         }
     }
 }
