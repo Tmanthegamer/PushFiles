@@ -95,6 +95,7 @@ namespace SendData {
             try {
                 Socket handler = (Socket) ar.AsyncState;
                 StateObject state = new StateObject {Buffer = Encoding.ASCII.GetBytes("500")};
+                handler.EndConnect(ar);
                 AllDone.Set();
                 ActiveIps.Add((handler.RemoteEndPoint as IPEndPoint)?.Address);
                 handler.BeginSend(state.Buffer, 0, state.Buffer.Length, 0, SendCallback, state);
