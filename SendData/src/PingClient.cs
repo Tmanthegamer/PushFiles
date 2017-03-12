@@ -11,7 +11,8 @@ namespace SendData {
     class PingClient {
         private readonly Socket _pingSocket;
         private static readonly ManualResetEvent AllDone = new ManualResetEvent(false);
-        public bool Exit { get; private set; } = false;
+        private bool Exit { get; set; } = false;
+        public static List<IPAddress> ActiveIps { get; } = new List<IPAddress>();
 
         public PingClient() {
             _pingSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
@@ -96,6 +97,7 @@ namespace SendData {
                 Socket handler = (Socket) ar.AsyncState;
                 StateObject state = new StateObject {Buffer = Encoding.ASCII.GetBytes("500")};
                 AllDone.Set();
+                ActiveIps.Add((handler.RemoteEndPoint as IPEndPoint)?.Address);
                 handler.BeginSend(state.Buffer, 0, state.Buffer.Length, 0, SendCallback, state);
             }
             catch (Exception e) {
