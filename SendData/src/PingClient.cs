@@ -9,13 +9,11 @@ using System.Threading;
 
 namespace SendData {
     class PingClient {
-        private Socket _pingSocket;
-        private static readonly ManualResetEvent AllDone = new ManualResetEvent(false);
         private bool Exit { get; set; } = false;
         private static List<IPAddress> ActiveIps { get; } = new List<IPAddress>();
 
         public PingClient() {
-            _pingSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+           
         }
 
         private static IPAddress GetSubnetMask(IPAddress address) {
@@ -61,13 +59,12 @@ namespace SendData {
             foreach (IPAddress ipAddress in IterateLocalIps(address)) {
                 foreach (int port in PortSettings.PingPortList()) {
                     try {
-                        AllDone.Reset();
+                        Socket pingSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
                         Console.WriteLine($@"{ipAddress} {port}");
-                        IAsyncResult ar = _pingSocket.BeginConnect(ipAddress, port, ConnectCallback, _pingSocket);
+                        IAsyncResult ar = pingSocket.BeginConnect(ipAddress, port, ConnectCallback, pingSocket);
                         if (!ar.AsyncWaitHandle.WaitOne(1000)) {
-                            throw new TimeoutException("Async Conenct timed out");
+                            pingSocket.Close();
                         }
-                        AllDone.WaitOne();
                     }
                     catch (Exception e) {
                         Console.WriteLine(e);
@@ -78,14 +75,6 @@ namespace SendData {
 
         public void Shutdown() {
             Exit = true;
-            try {
-                if (!_pingSocket.Connected) return;
-                _pingSocket.Shutdown(SocketShutdown.Both);
-                _pingSocket.Close();
-            }
-            catch (SocketException e) {
-                Console.WriteLine(e);
-            }
         }
 
         private static void ConnectCallback(IAsyncResult ar) {
@@ -93,7 +82,6 @@ namespace SendData {
                 Socket handler = (Socket) ar.AsyncState;
                 StateObject state = new StateObject {Buffer = Encoding.ASCII.GetBytes("500")};
                 handler.EndConnect(ar);
-                AllDone.Set();
                 ActiveIps.Add((handler.RemoteEndPoint as IPEndPoint)?.Address);
                 handler.BeginSend(state.Buffer, 0, state.Buffer.Length, 0, SendCallback, state);
             }
