@@ -8,11 +8,12 @@ using System.Text;
 using System.Threading;
 
 namespace SendData {
+
     class PingClient {
-        private readonly Socket _pingSocket;
+        private Socket _pingSocket;
         private static readonly ManualResetEvent AllDone = new ManualResetEvent(false);
         private bool Exit { get; set; } = false;
-        public static List<IPAddress> ActiveIps { get; } = new List<IPAddress>();
+        private static List<IPAddress> ActiveIps { get; } = new List<IPAddress>();
 
         public PingClient() {
             _pingSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
@@ -59,22 +60,11 @@ namespace SendData {
                 where ipAddress.AddressFamily == AddressFamily.InterNetwork
                 select ipAddress.MapToIPv4()).FirstOrDefault();
             foreach (IPAddress ipAddress in IterateLocalIps(address)) {
-                Console.WriteLine($@"Scanning {ipAddress}: ");
                 foreach (int port in PortSettings.PingPortList()) {
-                    try {
-                        AllDone.Reset();
-                        //Console.WriteLine($@"On Port: {port}");
-                        if (_pingSocket.Connected) break;
-                        IAsyncResult ar = _pingSocket.BeginConnect(new IPEndPoint(ipAddress, port), ConnectCallback,
-                            _pingSocket);
-                        if(!ar.AsyncWaitHandle.WaitOne(1000)) { 
-                            throw new Exception();
-                        }
-                        AllDone.WaitOne();
-                    }
-                    catch (Exception e) {
-                        //Console.WriteLine(@"Could not connect.");
-                    }
+                    AllDone.Reset();
+                    Console.WriteLine($@"{ipAddress} {port}");
+                    _pingSocket.Connect(ipAddress, port);
+                    AllDone.WaitOne(1000);
                 }
             }
         }
@@ -129,7 +119,6 @@ namespace SendData {
             }
             catch (Exception e) {
                 Console.WriteLine(e);
-                throw;
             }
         }
     }
