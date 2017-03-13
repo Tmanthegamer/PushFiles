@@ -8,7 +8,6 @@ using System.Text;
 using System.Threading;
 
 namespace SendData {
-
     class PingClient {
         private Socket _pingSocket;
         private static readonly ManualResetEvent AllDone = new ManualResetEvent(false);
@@ -61,10 +60,18 @@ namespace SendData {
                 select ipAddress.MapToIPv4()).FirstOrDefault();
             foreach (IPAddress ipAddress in IterateLocalIps(address)) {
                 foreach (int port in PortSettings.PingPortList()) {
-                    AllDone.Reset();
-                    Console.WriteLine($@"{ipAddress} {port}");
-                    _pingSocket.Connect(ipAddress, port);
-                    AllDone.WaitOne(1000);
+                    try {
+                        AllDone.Reset();
+                        Console.WriteLine($@"{ipAddress} {port}");
+                        IAsyncResult ar = _pingSocket.BeginConnect(ipAddress, port, ConnectCallback, _pingSocket);
+                        if (!ar.AsyncWaitHandle.WaitOne(1000)) {
+                            throw new TimeoutException("Async Conenct timed out");
+                        }
+                        AllDone.WaitOne();
+                    }
+                    catch (Exception e) {
+                        Console.WriteLine(e);
+                    }
                 }
             }
         }
