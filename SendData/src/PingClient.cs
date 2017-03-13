@@ -12,9 +12,7 @@ namespace SendData {
         private bool Exit { get; set; } = false;
         private static List<IPAddress> ActiveIps { get; } = new List<IPAddress>();
 
-        public PingClient() {
-           
-        }
+        public PingClient() {}
 
         private static IPAddress GetSubnetMask(IPAddress address) {
             foreach (NetworkInterface adapter in NetworkInterface.GetAllNetworkInterfaces()) {
@@ -59,15 +57,16 @@ namespace SendData {
             foreach (IPAddress ipAddress in IterateLocalIps(address)) {
                 foreach (int port in PortSettings.PingPortList()) {
                     try {
-                        Socket pingSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                        Socket pingSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream,
+                            ProtocolType.Tcp);
                         Console.WriteLine($@"{ipAddress} {port}");
                         IAsyncResult ar = pingSocket.BeginConnect(ipAddress, port, ConnectCallback, pingSocket);
-                        if (!ar.AsyncWaitHandle.WaitOne(1000)) {
+                        if (!ar.AsyncWaitHandle.WaitOne(500)) {
                             pingSocket.Close();
                         }
                     }
                     catch (Exception e) {
-                        Console.WriteLine(e);
+                        //Console.WriteLine(e);
                     }
                 }
             }
