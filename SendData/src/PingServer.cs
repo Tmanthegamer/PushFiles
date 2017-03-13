@@ -37,8 +37,13 @@ namespace SendData {
             }
             try {
                 foreach (int port in PortSettings.PingPortList()) {
-                    _pingSocket.Bind(new IPEndPoint(address, port));
-                    if (_pingSocket.IsBound) break;
+                    try {
+                        _pingSocket.Bind(new IPEndPoint(address, port));
+                        if (_pingSocket.IsBound) break;
+                    }
+                    catch (Exception e) {
+                        Console.WriteLine(e);
+                    }
                 }
                 if (_pingSocket.IsBound == false) throw new Exception("Socket Not Bound in PingServer.Run");
                 _pingSocket.Listen(byte.MaxValue);

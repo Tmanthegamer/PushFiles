@@ -6,6 +6,7 @@ using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace SendData {
     class PingClient {
@@ -54,7 +55,8 @@ namespace SendData {
                 from ipAddress in host.AddressList
                 where ipAddress.AddressFamily == AddressFamily.InterNetwork
                 select ipAddress.MapToIPv4()).FirstOrDefault();
-            foreach (IPAddress ipAddress in IterateLocalIps(address)) {
+            Parallel.ForEach(IterateLocalIps(address), new ParallelOptions{MaxDegreeOfParallelism = 4}, (ipAddress) => {
+                if (Equals(ipAddress, address)) return;
                 foreach (int port in PortSettings.PingPortList()) {
                     try {
                         Socket pingSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream,
@@ -69,7 +71,10 @@ namespace SendData {
                         //Console.WriteLine(e);
                     }
                 }
-            }
+            });
+            /* foreach (IPAddress ipAddress in IterateLocalIps(address)) {
+                 
+             }*/
         }
 
         public void Shutdown() {
