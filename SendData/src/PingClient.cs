@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
@@ -49,32 +50,44 @@ namespace SendData {
             }
         }
 
-        public void Run() {
+        public void Run(ManualResetEvent scanDoneEvent) {
             IPHostEntry host = Dns.GetHostEntry(Dns.GetHostName());
             IPAddress address = (
                 from ipAddress in host.AddressList
                 where ipAddress.AddressFamily == AddressFamily.InterNetwork
                 select ipAddress.MapToIPv4()).FirstOrDefault();
-            Parallel.ForEach(IterateLocalIps(address), new ParallelOptions{MaxDegreeOfParallelism = 4}, (ipAddress) => {
-                if (Equals(ipAddress, address)) return;
-                foreach (int port in PortSettings.PingPortList()) {
-                    try {
-                        Socket pingSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream,
-                            ProtocolType.Tcp);
-                        Console.WriteLine($@"{ipAddress} {port}");
-                        IAsyncResult ar = pingSocket.BeginConnect(ipAddress, port, ConnectCallback, pingSocket);
-                        if (!ar.AsyncWaitHandle.WaitOne(500)) {
-                            pingSocket.Close();
-                        }
-                    }
-                    catch (Exception e) {
-                        //Console.WriteLine(e);
-                    }
+            Task.Run(() => {
+                while (!Exit) {
+                    Parallel.ForEach(IterateLocalIps(address), new ParallelOptions {MaxDegreeOfParallelism = 12},
+                        (ipAddress) => {
+                            if (Equals(ipAddress, address)) {}
+                            else
+                                foreach (int port in PortSettings.PingPortList()) {
+                                    try {
+                                        Socket pingSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream,
+                                            ProtocolType.Tcp);
+                                        Console.WriteLine($@"{ipAddress} {port}");
+
+                                        IAsyncResult ar = pingSocket.BeginConnect(ipAddress, port, ConnectCallback,
+                                            pingSocket);
+                                        if (!ar.AsyncWaitHandle.WaitOne(500)) {
+                                            pingSocket.Close();
+                                        }
+                                    }
+                                    catch (Exception e) {
+                                        //Console.WriteLine(e);
+                                    }
+                                }
+                        });
+                    Console.WriteLine(@"Scanning Done, Writing to file");
+                    File.WriteAllLines("ActiveIps", ActiveIps.Select(x=>x.ToString()));
+                    scanDoneEvent.Set();
+                    Console.WriteLine(@"Done Writing");
+                    Console.WriteLine(@"Waiting 10 sec");
+                    Thread.Sleep(10000);
+                    scanDoneEvent.Reset();
                 }
             });
-            /* foreach (IPAddress ipAddress in IterateLocalIps(address)) {
-                 
-             }*/
         }
 
         public void Shutdown() {
@@ -90,7 +103,8 @@ namespace SendData {
                 handler.BeginSend(state.Buffer, 0, state.Buffer.Length, 0, SendCallback, state);
             }
             catch (Exception e) {
-                Console.WriteLine(e);
+                //Console.WriteLine(e);
+                //Console.WriteLine(@"Connect Timed out");
             }
         }
 

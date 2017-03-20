@@ -4,7 +4,7 @@ namespace SendData {
     public static class PortSettings {
 
         private const int PingPortStart = 1337;
-        private const int PortSize = 10;
+        private const int PortSize = 3;
         private const int DataPortStart = PingPortStart + PortSize;
 
         public static int[] PingPortList() {

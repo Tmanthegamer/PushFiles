@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -11,14 +13,29 @@ namespace SendData {
     ///     Interaction logic for MainWindow.xaml
     /// </summary>
     public partial class MainWindow : MetroWindow {
+        #region Variables
+        private readonly Thread _pingServerThread;
+        private readonly Thread _pingClientThread;
+        private readonly PingServer _ps = new PingServer();
+        private readonly PingClient _pc = new PingClient();
+        private List<string> LocalIPs { get; set; } = new List<string>();
+        public ManualResetEvent ScanDone {get; private set;} = new ManualResetEvent(false);
+        #endregion
+
         public MainWindow() {
             InitializeComponent();
-            LoadLocalIps();
-            //DebugMenu(StatusItemSelectedCount);
+            _pingServerThread = new Thread(() => _ps.Run());
+            _pingClientThread = new Thread(() => _pc.Run(ScanDone));
+            _pingServerThread.Start();
+            _pingClientThread.Start();
+            AwaitScan();
         }
 
-        public bool WaitingOnAsync { get; set; }
-        private List<string> LocalIPs { get; } = new List<string>();
+        protected override void OnClosed(EventArgs e) {
+            base.OnClosed(e);
+            _pingClientThread.Abort();
+            _pingServerThread.Abort();
+        }
 
         /// <summary>
         ///     Writes the content of DependencyObject to standard output.
@@ -39,21 +56,18 @@ namespace SendData {
             FileTransfer.SendBytes(new byte[] {1, 2, 3, 4, 5}, "192.168.1.71", 1337);
         }
 
-        private async void Exit_Program(object sender, RoutedEventArgs e) {
-            while (WaitingOnAsync) await Task.Delay(100);
-            Close();
-        }
-
-        private async void LoadLocalIps() {
-            WaitingOnAsync = true;
-
-            WaitingOnAsync = false;
-            FillLocalIpsBox();
+        private void AwaitScan() {
+            ScanDone.WaitOne();
+            LocalIPs = File.ReadAllLines("ActiveIps").ToList();
         }
 
         private void FillLocalIpsBox() {
             if (LocalIPs == null) return;
             foreach (string localIp in LocalIPs) FolderListView.Items.Add(new Button {Content = localIp});
+        }
+
+        private void Exit_Program(object sender, RoutedEventArgs e) {
+            base.Close();
         }
     }
 }
