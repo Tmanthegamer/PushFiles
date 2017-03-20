@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 namespace SendData {
     class PingClient {
         private bool Exit { get; set; } = false;
-        private static List<IPAddress> ActiveIps { get; } = new List<IPAddress>();
+        private static List<IPEndPoint> ActiveIps { get; } = new List<IPEndPoint>();
 
         public PingClient() {}
 
@@ -99,7 +99,7 @@ namespace SendData {
                 Socket handler = (Socket) ar.AsyncState;
                 StateObject state = new StateObject {Buffer = Encoding.ASCII.GetBytes("500")};
                 handler.EndConnect(ar);
-                ActiveIps.Add((handler.RemoteEndPoint as IPEndPoint)?.Address);
+                ActiveIps.Add((handler.RemoteEndPoint as IPEndPoint));
                 handler.BeginSend(state.Buffer, 0, state.Buffer.Length, 0, SendCallback, state);
             }
             catch (Exception e) {

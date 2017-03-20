@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -20,7 +21,7 @@ namespace SendData {
         private readonly PingServer _ps = new PingServer();
         private readonly PingClient _pc = new PingClient();
         private List<string> LocalIPs { get; set; } = new List<string>();
-        public ManualResetEvent ScanDone {get; private set;} = new ManualResetEvent(false);
+        private ManualResetEvent ScanDone {get; set;} = new ManualResetEvent(false);
         #endregion
 
         public MainWindow() {
@@ -58,7 +59,7 @@ namespace SendData {
         }
 
         private void Messages_OnClick(object sender, RoutedEventArgs e) {
-            FileTransfer.SendBytes(new byte[] {1, 2, 3, 4, 5}, "192.168.1.71", 1337);
+            
         }
 
         private void AwaitScan(Action awaitCode) {
@@ -67,7 +68,10 @@ namespace SendData {
 
         private void FillLocalIpsBox() {
             if (LocalIPs == null) return;
-            foreach (string localIp in LocalIPs) FolderListView.Items.Add(new Button {Content = localIp});
+
+            foreach (string localIp in LocalIPs) {
+                Application.Current.Dispatcher.Invoke(() => FolderListView.Items.Add(new Button {Content = localIp}));
+            }
         }
 
         private void Exit_Program(object sender, RoutedEventArgs e) {
