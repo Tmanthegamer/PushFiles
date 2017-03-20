@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -28,7 +29,11 @@ namespace SendData {
             _pingClientThread = new Thread(() => _pc.Run(ScanDone));
             _pingServerThread.Start();
             _pingClientThread.Start();
-            AwaitScan();
+            AwaitScan(() => {
+                ScanDone.WaitOne();
+                LocalIPs = File.ReadAllLines("ActiveIps").ToList();
+                FillLocalIpsBox();
+            });
         }
 
         protected override void OnClosed(EventArgs e) {
@@ -56,9 +61,8 @@ namespace SendData {
             FileTransfer.SendBytes(new byte[] {1, 2, 3, 4, 5}, "192.168.1.71", 1337);
         }
 
-        private void AwaitScan() {
-            ScanDone.WaitOne();
-            LocalIPs = File.ReadAllLines("ActiveIps").ToList();
+        private void AwaitScan(Action awaitCode) {
+            Task.Run(awaitCode);
         }
 
         private void FillLocalIpsBox() {
