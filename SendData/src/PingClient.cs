@@ -44,6 +44,8 @@ namespace SendData {
             int maskCount = smask.Count(s => s == "0");
             int ipsize = smask.Count(s => s == "255");
             string maskedAddr = MaskIp(localIp, ipsize);
+            // TODO make sure it works for networks that are masked differently
+            // TODO BCIT network for example is 255.255.252.0
             double cips = Math.Pow(255, maskCount);
             for (int i = 0; i < cips; i++) {
                 yield return IPAddress.Parse(maskedAddr + i);

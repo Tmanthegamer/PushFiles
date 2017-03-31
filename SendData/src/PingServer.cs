@@ -47,9 +47,8 @@ namespace SendData {
                 }
                 if (_pingSocket.IsBound == false) throw new Exception("Socket Not Bound in PingServer.Run");
                 _pingSocket.Listen(byte.MaxValue);
-                while (true) {
+                while (!Exit) {
                     AllDone.Reset();
-                    if (Exit) return;
                     Console.WriteLine($@"Waiting for a Connection on {_pingSocket.LocalEndPoint}");
                     _pingSocket.BeginAccept(AcceptCallback, _pingSocket);
                     AllDone.WaitOne();
