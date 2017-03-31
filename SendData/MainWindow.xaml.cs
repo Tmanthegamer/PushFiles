@@ -31,7 +31,9 @@ namespace SendData {
             //_pingServerThread.Start();
             //_pingClientThread.Start();
             PingServerUdp psu = new PingServerUdp();
-            psu.Run();
+            PingClientUdp pcu = new PingClientUdp();
+            psu.Run(ScanDone);
+            pcu.Run();
             AwaitScan();
         }
 

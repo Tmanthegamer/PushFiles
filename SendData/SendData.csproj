@@ -87,6 +87,7 @@
     <Compile Include="src\FilePicker.cs" />
     <Compile Include="src\FileTransfer.cs" />
     <Compile Include="src\PingClient.cs" />
+    <Compile Include="src\PingClientUdp.cs" />
     <Compile Include="src\PingServer.cs" />
     <Compile Include="src\PingServerUDP.cs" />
     <Compile Include="src\PortSettings.cs" />
