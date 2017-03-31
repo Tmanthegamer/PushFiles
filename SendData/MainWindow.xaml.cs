@@ -28,13 +28,11 @@ namespace SendData {
             InitializeComponent();
             _pingServerThread = new Thread(() => _ps.Run());
             _pingClientThread = new Thread(() => _pc.Run(ScanDone));
-            _pingServerThread.Start();
-            _pingClientThread.Start();
-            AwaitScan(() => {
-                ScanDone.WaitOne();
-                LocalIPs = File.ReadAllLines("ActiveIps").ToList();
-                FillLocalIpsBox();
-            });
+            //_pingServerThread.Start();
+            //_pingClientThread.Start();
+            PingServerUdp psu = new PingServerUdp();
+            psu.Run();
+            AwaitScan();
         }
 
         protected override void OnClosed(EventArgs e) {
@@ -62,8 +60,12 @@ namespace SendData {
             
         }
 
-        private void AwaitScan(Action awaitCode) {
-            Task.Run(awaitCode);
+        private void AwaitScan() {
+            Task.Run(() => {
+                ScanDone.WaitOne();
+                LocalIPs = File.ReadAllLines("ActiveIps").ToList();
+                FillLocalIpsBox();
+            });
         }
 
         private void FillLocalIpsBox() {

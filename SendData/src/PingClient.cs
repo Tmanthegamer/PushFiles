@@ -41,7 +41,7 @@ namespace SendData {
             IPAddress mask = GetSubnetMask(localIp);
             Console.WriteLine($@"Mask {mask}");
             string[] smask = mask.ToString().Split('.');
-            int maskCount = smask.Count(s => s == "0");
+            int maskCount = smask.Count(s => s != "255");
             int ipsize = smask.Count(s => s == "255");
             string maskedAddr = MaskIp(localIp, ipsize);
             // TODO make sure it works for networks that are masked differently
