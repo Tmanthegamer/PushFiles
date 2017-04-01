@@ -31,12 +31,11 @@ namespace SendData {
             PingClientUdp pcu = new PingClientUdp();
             psu.Run(ScanDone);
             pcu.Run();
+            AwaitScan();
         }
 
         protected override void OnClosed(EventArgs e) {
             base.OnClosed(e);
-            _pingClientThread.Abort();
-            _pingServerThread.Abort();
         }
 
         /// <summary>
