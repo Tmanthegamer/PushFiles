@@ -85,6 +85,7 @@
     </ApplicationDefinition>
     <Compile Include="src\Connection.cs" />
     <Compile Include="src\FilePicker.cs" />
+    <Compile Include="src\FileStreamWrapper.cs" />
     <Compile Include="src\FileTransfer.cs" />
     <Compile Include="src\PingClient.cs" />
     <Compile Include="src\PingClientUdp.cs" />
