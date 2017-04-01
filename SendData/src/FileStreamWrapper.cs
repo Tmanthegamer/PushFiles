@@ -26,16 +26,19 @@ namespace SendData.src
          */
         public FileStreamWrapper( Stream[] files, Object CONNECT_OBJECT )
         {
-            fileList = new List<Stream>();
-            foreach (Stream file in files)
+            if( files != null )
             {
-                fileList.Add(file);
+                fileList = files.ToList();
+            }
+            else
+            {
+                fileList = new List<Stream>();
             }
 
             SetConnection(CONNECT_OBJECT);
         }
 
-        public FileStreamWrapper( Stream file )
+        public FileStreamWrapper( Stream file, Object CONNECT_OBJECT )
         {
             fileList = new List<Stream>();
             fileList.Add(file);
@@ -46,7 +49,7 @@ namespace SendData.src
             fileList = new List<Stream>();
         }
 
-        public void SetConnection(Object CONNECT_OBJECT)
+        public void SetConnection( Object CONNECT_OBJECT )
         {
             if(CONNECT_OBJECT != null )
             {
