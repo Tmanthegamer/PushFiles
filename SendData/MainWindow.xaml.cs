@@ -15,26 +15,22 @@ namespace SendData {
     ///     Interaction logic for MainWindow.xaml
     /// </summary>
     public partial class MainWindow : MetroWindow {
+        
         #region Variables
         private readonly Thread _pingServerThread;
         private readonly Thread _pingClientThread;
         private readonly PingServer _ps = new PingServer();
         private readonly PingClient _pc = new PingClient();
-        private List<string> LocalIPs { get; set; } = new List<string>();
+        private List<IPEndPoint> _localIPs = new List<IPEndPoint>();
         private ManualResetEvent ScanDone {get; set;} = new ManualResetEvent(false);
         #endregion
 
         public MainWindow() {
             InitializeComponent();
-            _pingServerThread = new Thread(() => _ps.Run());
-            _pingClientThread = new Thread(() => _pc.Run(ScanDone));
-            //_pingServerThread.Start();
-            //_pingClientThread.Start();
-            PingServerUdp psu = new PingServerUdp();
+            PingServerUdp psu = new PingServerUdp(ref _localIPs);
             PingClientUdp pcu = new PingClientUdp();
             psu.Run(ScanDone);
             pcu.Run();
-            AwaitScan();
         }
 
         protected override void OnClosed(EventArgs e) {
@@ -65,15 +61,13 @@ namespace SendData {
         private void AwaitScan() {
             Task.Run(() => {
                 ScanDone.WaitOne();
-                LocalIPs = File.ReadAllLines("ActiveIps").ToList();
                 FillLocalIpsBox();
             });
         }
 
         private void FillLocalIpsBox() {
-            if (LocalIPs == null) return;
-
-            foreach (string localIp in LocalIPs) {
+            if (_localIPs == null) return;
+            foreach (IPEndPoint localIp in _localIPs) {
                 Application.Current.Dispatcher.Invoke(() => FolderListView.Items.Add(new Button {Content = localIp}));
             }
         }

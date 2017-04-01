@@ -8,33 +8,20 @@ using System.Threading;
 using System.Threading.Tasks;
 
 namespace SendData {
-    public class PingClientUdp {
-        private readonly UdpClient _pingSocket;
-        private static readonly ManualResetEvent AllDone = new ManualResetEvent(false);
+
+        class PingClientUdp {
         private bool Exit { get; set; } = false;
-        private static List<IPEndPoint> ActiveIps { get; } = new List<IPEndPoint>();
+        private readonly Socket _pingClient;
         public PingClientUdp() {
-            _pingSocket = new UdpClient(new IPEndPoint(IPAddress.Any, PortSettings.PingPortList()[0]));
+            _pingClient = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
         }
 
         public void Run() {
-            IPAddress currentIp = Dns.GetHostAddresses(Dns.GetHostName()).FirstOrDefault(x=>x.AddressFamily == AddressFamily.InterNetwork);
             Task.Run(() => {
                 while (!Exit) {
-                    try {
-                        Task<UdpReceiveResult> work = _pingSocket.ReceiveAsync();
-                        UdpReceiveResult data = work.Result;
-                        if (!Equals(data.RemoteEndPoint.Address, currentIp)) {
-                            Console.WriteLine($@"{Encoding.ASCII.GetString(data.Buffer)}:{data.RemoteEndPoint}");
-                            if (ActiveIps.Exists(e => e.Equals(data.RemoteEndPoint.Address))) {
-                                ActiveIps.Add(data.RemoteEndPoint);
-                            }
-                        }
-                    }
-                    catch
-                        (Exception e) {
-                        Console.WriteLine(e);
-                    }
+                    Task.Delay(10000).Wait();
+                    _pingClient.SendTo(Encoding.ASCII.GetBytes("Hello World!"),
+                        new IPEndPoint(IPAddress.Parse("192.168.1.255"), PortSettings.PingPortList()[0]));
                 }
             });
         }

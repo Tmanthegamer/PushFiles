@@ -10,19 +10,35 @@ using System.Threading;
 using System.Threading.Tasks;
 
 namespace SendData {
-    class PingServerUdp {
+    public class PingServerUdp {
+        private readonly UdpClient _pingSocket;
+        private static readonly ManualResetEvent AllDone = new ManualResetEvent(false);
         private bool Exit { get; set; } = false;
-        private readonly Socket _pingClient;
-        public PingServerUdp() {
-            _pingClient = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+        private  List<IPEndPoint> ActiveIps { get; set; }
+        public PingServerUdp(ref List<IPEndPoint> ips) {
+            _pingSocket = new UdpClient(new IPEndPoint(IPAddress.Any, PortSettings.PingPortList()[0]));
+            ActiveIps = ips;
         }
 
         public void Run(ManualResetEvent scanDoneEvent) {
+            IPAddress currentIp = Dns.GetHostAddresses(Dns.GetHostName()).FirstOrDefault(x=>x.AddressFamily == AddressFamily.InterNetwork);
             Task.Run(() => {
                 while (!Exit) {
-                    Task.Delay(5000).Wait();
-                    _pingClient.SendTo(Encoding.ASCII.GetBytes("Hello World!"),
-                        new IPEndPoint(IPAddress.Parse("192.168.1.255"), PortSettings.PingPortList()[0]));
+                    try {
+                        Task<UdpReceiveResult> work = _pingSocket.ReceiveAsync();
+                        UdpReceiveResult data = work.Result;
+                        if (Equals(data.RemoteEndPoint.Address, currentIp)) continue;
+                        Console.WriteLine($@"{Encoding.ASCII.GetString(data.Buffer)}:{data.RemoteEndPoint}");
+                        if (!ActiveIps.Exists(e => e.Equals(data.RemoteEndPoint))) {
+                            ActiveIps.Add(data.RemoteEndPoint);
+                        }
+                        scanDoneEvent.Set();
+                        scanDoneEvent.Reset();
+                    }
+                    catch
+                        (Exception e) {
+                        Console.WriteLine(e);
+                    }
                 }
             });
         }
@@ -31,4 +47,5 @@ namespace SendData {
             Exit = true;
         }
     }
+
 }
